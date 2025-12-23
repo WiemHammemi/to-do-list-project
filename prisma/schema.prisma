@@ -12,6 +12,6 @@ model users {
   id         Int       @id @default(autoincrement())
   email      String    @unique
   password   String
-  name       String?
+  name       String?   
   created_at DateTime? @default(now()) @db.Timestamp(6)
 }
