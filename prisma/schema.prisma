@@ -17,6 +17,6 @@ model users {
   updated_at DateTime? 
   twoFAEnabled  Boolean @default(false)
   twoFASecret   String?
-  twoFAType String?
+  twoFAType     String?
 
 }

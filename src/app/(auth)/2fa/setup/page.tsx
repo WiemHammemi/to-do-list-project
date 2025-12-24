@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function Setup2FAPage() {
-//   const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [qrCode, setQrCode] = useState<string>("");
   const [secret, setSecret] = useState<string>("");
@@ -30,7 +30,7 @@ export default function Setup2FAPage() {
       const response = await fetch("/api/2fa/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify({ userId: session?.user}),
+        body: JSON.stringify({ userId: session?.user?.id }),
       });
 
       const data = await response.json();
@@ -64,10 +64,10 @@ export default function Setup2FAPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-        //   userId: session?.user,
+          userId: session?.user?.id,
           token,
         }),
-      });
+      }); 
 
       const data = await response.json();
 
