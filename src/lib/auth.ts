@@ -1,4 +1,3 @@
-// lib/auth.ts
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -24,6 +23,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+
         const user = await prisma.users.findUnique({
           where: { email: credentials.email },
         });
@@ -36,6 +36,9 @@ export const authOptions: NextAuthOptions = {
 
         if (!passwordMatch) {
           return null;
+        }
+        if (user.twoFAEnabled) {
+          throw new Error("2FA_REQUIRED");
         }
 
         return {

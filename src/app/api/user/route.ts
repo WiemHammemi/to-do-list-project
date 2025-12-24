@@ -18,7 +18,7 @@ export async function POST(req: Request) {
             return NextResponse.json({message: "Email already in use"}, {status: 409});
         }
 
-        const hashedPassword = await hash(password, 10); // TODO: hash the password before storing
+        const hashedPassword = await hash(password, 10); 
 
         const newUser = await prisma.users.create({
             data: {
