@@ -18,5 +18,6 @@ model users {
   twoFAEnabled  Boolean @default(false)
   twoFASecret   String?
   twoFAType     String?
+  twoFAVerifiedAt  DateTime?
 
 }

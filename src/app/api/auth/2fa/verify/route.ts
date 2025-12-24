@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
       data: {
         twoFAEnabled: true,
         twoFAType: method,
-        // Garder le secret pour authenticator, effacer pour email/sms
         twoFASecret: method === "authenticator" ? user.twoFASecret : null,
       },
     });

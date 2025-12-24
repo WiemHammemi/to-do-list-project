@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/email";
 import * as speakeasy from "speakeasy";
 import * as QRCode from "qrcode";
 
@@ -30,8 +31,8 @@ export async function POST(req: NextRequest) {
     if (method === "authenticator") {
       // Générer un secret pour Google Authenticator
       const secret = speakeasy.generateSecret({
-        name: `MyApp (${user.email})`,
-        issuer: "MyApp",
+        name: `Next App (${user.email})`,
+        issuer: "NextApp",
       });
 
       // Stocker temporairement le secret (vous pouvez utiliser Redis ou une table temporaire)
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
       });
 
       // Envoyer l'email (à implémenter avec nodemailer ou un service d'email)
-      // await sendEmail(user.email, "Code de vérification", `Votre code est: ${code}`);
+      await sendEmail(user.email, "Code de vérification", `Votre code est: ${code}`);
 
       console.log(`Code email pour ${user.email}: ${code}`);
 
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
         data: { twoFASecret: code },
       });
 
-      // Envoyer le SMS (à implémenter avec Twilio ou un service SMS)
+      // Envoyer le SMS (à implémenter avec Twilio)
       // await sendSMS(user.phone, `Votre code de vérification: ${code}`);
 
       console.log(`Code SMS pour ${user.email}: ${code}`);

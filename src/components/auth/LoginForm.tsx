@@ -18,6 +18,8 @@ export default function LoginForm() {
   const [show2FA, setShow2FA] = useState(false);
   const [twoFACode, setTwoFACode] = useState("");
   const [tempCredentials, setTempCredentials] = useState({ email: "", password: "" });
+  const [resendLoading, setResendLoading] = useState(false);
+  const [twoFAMethod, setTwoFAMethod] = useState("");
 
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
@@ -54,10 +56,39 @@ export default function LoginForm() {
 
       if (result?.error) {
         if (result.error === "2FA_REQUIRED") {
-          // Afficher le formulaire 2FA
-          setTempCredentials({ email: formData.email, password: formData.password });
-          setShow2FA(true);
-          setError("");
+          // Envoyer automatiquement le code pour email/SMS
+          try {
+            const sendCodeResponse = await fetch("/api/auth/2fa/send-code", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: formData.email }),
+            });
+
+            if (sendCodeResponse.ok) {
+              const data = await sendCodeResponse.json();
+              // Afficher le formulaire 2FA
+              setTempCredentials({ email: formData.email, password: formData.password });
+              setShow2FA(true);
+              setTwoFAMethod(data.method);
+              setError("");
+              // Afficher un message si c'est email/SMS
+              if (data.method === "email") {
+                setSuccess("Un code de vérification a été envoyé à votre email");
+              } else if (data.method === "sms") {
+                setSuccess("Un code de vérification a été envoyé par SMS");
+              }
+            } else {
+              // Si l'envoi échoue, on affiche quand même le formulaire (pour authenticator)
+              setTempCredentials({ email: formData.email, password: formData.password });
+              setShow2FA(true);
+              setError("");
+            }
+          } catch (sendError) {
+            // En cas d'erreur, on affiche quand même le formulaire 2FA
+            setTempCredentials({ email: formData.email, password: formData.password });
+            setShow2FA(true);
+            setError("");
+          }
         } else {
           setError("Email ou mot de passe incorrect");
         }
@@ -71,6 +102,35 @@ export default function LoginForm() {
       setError("Erreur de connexion au serveur");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setResendLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/auth/2fa/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: tempCredentials.email }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.method === "email") {
+          setSuccess("Un nouveau code a été envoyé à votre email");
+        } else if (data.method === "sms") {
+          setSuccess("Un nouveau code a été envoyé par SMS");
+        }
+      } else {
+        setError("Impossible de renvoyer le code");
+      }
+    } catch (err) {
+      setError("Erreur lors de l'envoi du code");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -132,6 +192,12 @@ export default function LoginForm() {
           </div>
 
           <form onSubmit={handleVerify2FA} className="space-y-6">
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                {success}
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
@@ -164,12 +230,25 @@ export default function LoginForm() {
               {loading ? "Vérification..." : "Vérifier"}
             </button>
 
+            {/* Bouton pour renvoyer le code (seulement pour email/SMS) */}
+            {twoFAMethod !== "authenticator" && (
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={resendLoading}
+                className="w-full text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
+              >
+                {resendLoading ? "Envoi en cours..." : "Renvoyer le code"}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
                 setShow2FA(false);
                 setTwoFACode("");
                 setError("");
+                setSuccess("");
               }}
               className="w-full text-gray-600 hover:text-gray-800 font-medium"
             >

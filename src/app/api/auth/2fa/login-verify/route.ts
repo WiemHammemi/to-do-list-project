@@ -42,15 +42,17 @@ export async function POST(req: NextRequest) {
         window: 2,
       });
     } else if ((user.twoFAType === "email" || user.twoFAType === "sms") && user.twoFASecret) {
-      // Pour email/sms, vous devriez avoir généré et envoyé un code au moment de la tentative de connexion
-      // Ici nous vérifions simplement le code stocké
+
       isValid = user.twoFASecret === code;
       
       // Nettoyer le code après vérification réussie
       if (isValid) {
         await prisma.users.update({
           where: { id: user.id },
-          data: { twoFASecret: null },
+          data: {
+             twoFASecret: null ,  
+             twoFAVerifiedAt: new Date(),
+            },
         });
       }
     }
@@ -68,5 +70,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
-
 

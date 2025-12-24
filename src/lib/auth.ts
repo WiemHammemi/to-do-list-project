@@ -19,34 +19,36 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+  if (!credentials?.email || !credentials?.password) {
+    return null;
+  }
 
+  const user = await prisma.users.findUnique({
+    where: { email: credentials.email },
+  });
 
-        const user = await prisma.users.findUnique({
-          where: { email: credentials.email },
-        });
+  if (!user) {
+    return null;
+  }
 
-        if (!user) {
-          return null;
-        }
+  const passwordMatch = await compare(credentials.password, user.password);
+  if (!passwordMatch) {
+    return null;
+  }
 
-        const passwordMatch = await compare(credentials.password, user.password);
+  // Vérifier si on doit bypasser le 2FA (après vérification réussie)
+  const skipTwoFA = (credentials as any).skipTwoFA === "true";
+  
+  if (user.twoFAEnabled && !skipTwoFA) {
+    throw new Error("2FA_REQUIRED");
+  }
 
-        if (!passwordMatch) {
-          return null;
-        }
-        if (user.twoFAEnabled) {
-          throw new Error("2FA_REQUIRED");
-        }
-
-        return {
-          id: String(`${user.id}`),
-          name: user.name,
-          email: user.email,
-        };
-      },
+  return {
+    id: String(user.id),
+    name: user.name,
+    email: user.email,
+  };
+}
     }),
   ],
   
