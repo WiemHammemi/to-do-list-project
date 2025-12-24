@@ -8,7 +8,7 @@ import { userSchema } from "@/lib/validators/userSchema";
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { email, name , password} = userSchema.parse(body);
+        const { email, name , password, phoneNumber} = userSchema.parse(body);
 
         // check if email already exists
         const existingUser = await prisma.users.findUnique({
@@ -24,7 +24,8 @@ export async function POST(req: Request) {
             data: {
                 email,
                 name,
-                password: hashedPassword,
+                phoneNumber,
+                password: hashedPassword, 
             },
         });
 

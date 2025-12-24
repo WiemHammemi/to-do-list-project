@@ -5,6 +5,7 @@ import { z } from 'zod';
 export const userSchema = z.object({
     email: z.string().min(1, 'Email is required').email('Invalid email address'),
     name: z.string().min(2,'Name is required').max(100),
+    phoneNumber: z.string().min(1, 'Phone number is required'),
     password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters long'),
     confirmPassword: z.string().min(8, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirmPassword, {

@@ -153,6 +153,7 @@ export default function SettingsPage() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <nav className="bg-white shadow-sm">
@@ -395,9 +396,13 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <p className="text-gray-900">{session?.user?.email}</p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone</label>
+              <p className="text-gray-900">{session?.user?.phoneNumber}</p>
+            </div>
           </div>
         </div>
       </main>
-    </div>
+    </div> 
   );
 }

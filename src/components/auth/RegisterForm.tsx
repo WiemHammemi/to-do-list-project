@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Phone } from "lucide-react";
 
 export default function RegisterForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phoneNumber:"",
     password: "",
     confirmPassword: "",
   });
@@ -22,6 +24,10 @@ export default function RegisterForm() {
     });
     setError("");
   };
+const validatePhone = (phone: string) => {
+  const e164Regex = /^\+[1-9]\d{7,14}$/;
+  return e164Regex.test(phone);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +36,10 @@ export default function RegisterForm() {
     // Validation
     if (!formData.name || !formData.email || !formData.password) {
       setError("Tous les champs sont requis");
+      return;
+    }
+       if (!validatePhone(formData.phoneNumber)) {
+      setError("Numéro de téléphone invalide");
       return;
     }
 
@@ -54,6 +64,7 @@ export default function RegisterForm() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
+          phoneNumber: formData.phoneNumber,
           password: formData.password,
           confirmPassword: formData.confirmPassword,
 
@@ -123,6 +134,23 @@ export default function RegisterForm() {
               placeholder="jean@example.com"
               disabled={loading}
             />
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              Numéro de téléphone
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+              placeholder="+216 12 345 678"
+              disabled={loading}
+            />
+
           </div>
 
           <div>

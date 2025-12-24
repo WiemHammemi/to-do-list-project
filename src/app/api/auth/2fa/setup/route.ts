@@ -3,12 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 import * as speakeasy from "speakeasy";
 import * as QRCode from "qrcode";
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+   
 
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -69,6 +71,13 @@ export async function POST(req: NextRequest) {
         message: "Code envoyé par email",
       });
     } else if (method === "sms") {
+      if (!user.phoneNumber) {
+        return NextResponse.json(
+          { error: "Aucun numéro de téléphone enregistré. Veuillez ajouter un numéro dans votre profil." },
+          { status: 400 }
+        );
+      }
+
       // Générer un code à 6 chiffres
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       
@@ -78,10 +87,9 @@ export async function POST(req: NextRequest) {
         data: { twoFASecret: code },
       });
 
-      // Envoyer le SMS (à implémenter avec Twilio)
-      // await sendSMS(user.phone, `Votre code de vérification: ${code}`);
+      await sendSMS(user.phoneNumber, `Votre code de vérification: ${code}`);
 
-      console.log(`Code SMS pour ${user.email}: ${code}`);
+      console.log(`Code SMS pour ${user.name}: ${code}`);
 
       return NextResponse.json({
         success: true,
