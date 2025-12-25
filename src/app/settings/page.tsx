@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Shield, Mail, Smartphone, Key, CheckCircle, XCircle } from "lucide-react";
+import { Shield, Mail, Smartphone, Key, CheckCircle, XCircle, User } from "lucide-react";
+import UserAccountNav from "@/components/UserAccountNav";
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState(""); 
   const [error, setError] = useState("");
   
   const [twoFASettings, setTwoFASettings] = useState({
@@ -159,13 +160,7 @@ export default function SettingsPage() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
-            >
-              Retour au tableau de bord
-            </button>
+            <UserAccountNav />
           </div>
         </div>
       </nav>

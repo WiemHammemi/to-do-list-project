@@ -16,12 +16,11 @@ export default async function DashboardPage() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-
+            
             <UserAccountNav />
           </div>
         </div>
-      </nav>
+      </nav> 
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow p-6">
