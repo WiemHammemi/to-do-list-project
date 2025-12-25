@@ -8,7 +8,7 @@ import Image from "next/image";
 export default function Setup2FAPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [qrCode, setQrCode] = useState<string>("");
+  const [qrCode, setQrCode] = useState<string>(""); 
   const [secret, setSecret] = useState<string>("");
   const [token, setToken] = useState<string>("");
   const [error, setError] = useState<string>("");

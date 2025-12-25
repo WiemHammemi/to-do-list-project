@@ -23,6 +23,9 @@ export default function UserAccountNav() {
   }, [status, router]);
 
   return (
+    <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
     <div className="flex w-full items-center justify-between">
 
       <button
@@ -84,5 +87,8 @@ export default function UserAccountNav() {
         )}
       </div>
     </div>
+    </div>
+    </div>
+    </nav>
   );
 }
