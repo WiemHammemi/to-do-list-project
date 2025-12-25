@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       });
     } else if (method === "sms") {
       if (!user.phoneNumber) {
-        return NextResponse.json(
+        return NextResponse.json( 
           { error: "Aucun numéro de téléphone enregistré. Veuillez ajouter un numéro dans votre profil." },
           { status: 400 }
         );
