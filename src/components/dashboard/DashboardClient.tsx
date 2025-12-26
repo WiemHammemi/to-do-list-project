@@ -190,6 +190,30 @@ export default function DashboardClient() {
     }
   };
 
+const exportStructure = async () => {
+  try {
+    const res = await fetch("/api/task/export-structure");
+
+    if (!res.ok) {
+      throw new Error("Erreur lors du téléchargement");
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "structure.xlsx";
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err: any) {
+    console.error(err);
+    alert("Impossible de télécharger la structure");
+  }
+};
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
       <div className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-200">
@@ -207,16 +231,16 @@ export default function DashboardClient() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+              {/* <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <Search size={18} className="text-gray-500" />
                 <span className="text-gray-700">Rechercher</span>
               </button>
               <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <Filter size={18} className="text-gray-500" />
                 <span className="text-gray-700">Filtrer</span>
-              </button>
+              </button> */}
 
-              <div className="h-8 w-px bg-gray-200"></div>
+              {/* <div className="h-8 w-px bg-gray-200"></div> */}
 
               <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <Upload size={18} className="text-emerald-500" />
@@ -226,7 +250,7 @@ export default function DashboardClient() {
                 <Download size={18} className="text-blue-500" />
                 <span className="text-gray-700">Exporter</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+              <button onClick={() => exportStructure()}  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <FileText size={18} className="text-purple-500" />
                 <span className="text-gray-700">Structure</span>
               </button>
