@@ -15,8 +15,6 @@ interface Props {
 export default function TaskCard({ task, onEdit, onDelete }: Props) {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
-  // const urgencyIndicator = getUrgencyIndicator(task);
-
 
   const {
     attributes,
