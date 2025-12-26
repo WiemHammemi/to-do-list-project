@@ -55,7 +55,7 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
   const colors = getColorVariants(color);
 
   return (
-    <div className="flex-1 min-w-[320px] flex flex-col">
+    <div className="flex-1 min-w-[320px] flex flex-col bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
 
       <div className={`bg-gradient-to-br ${colors.gradient} rounded-xl p-4 mb-4 border-2 ${colors.border} ${colors.shadow} shadow-md`}>
         <div className="flex items-center justify-between mb-2">

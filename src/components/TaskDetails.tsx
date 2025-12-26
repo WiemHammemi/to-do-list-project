@@ -15,7 +15,6 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState(task);
   const router = useRouter();
 
@@ -76,6 +75,31 @@ const handleDelete = async (id: string) => {
   }
 };
 
+ const handleSaveEdit = async (updatedTask: Task) => {
+    try {
+      const res = await fetch(`/api/task/${updatedTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedTask),
+      });
+
+      if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Erreur lors de la modification.");
+    }
+    setTask(updatedTask);
+    closeModal();
+
+    }
+    catch (err: any) {
+      console.error("Erreur modification tâche :", err.message);
+      alert("Impossible de modifier la tâche : " + err.message);
+      return;
+    }
+  };
+
+
+
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch(priority) {
@@ -113,10 +137,6 @@ const handleDelete = async (id: string) => {
     }
   };
 
-  const handleSaveEdit = () => {
-    setTask(editedTask);
-    setIsEditing(false);
-  };
 
   
 const formatDate = (date?: string | null) => {
@@ -273,10 +293,7 @@ if (!task) {
   <EditTaskModal
     task={selectedTask}
     onClose={closeModal}
-    onSave={(updatedTask) => {
-      setTask(updatedTask);
-      closeModal();
-    }}
+    onSave={handleSaveEdit}
   />
 )}
 

@@ -60,8 +60,13 @@ export default function TaskCard({ task, onEdit, onDelete }:  Props) {
   const isOverdue = dueDate < today && task.status !== 'completed';
   const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
+  const priorityHoverBorder = task.priority === 'high' ? 'hover:border-red-300' :
+                            task.priority === 'medium' ? 'hover:border-amber-300' :
+                            task.priority === 'low' ? 'hover:border-emerald-300' : 'hover:border-gray-200';
+
+
   return (
-    <div className="group relative bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all duration-300 overflow-hidden">
+    <div className={`group relative bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md  transition-all duration-300 overflow-hidden ${priorityConfig.border} ${priorityHoverBorder}`}>
 
       <div className={`h-1 ${priorityConfig.dot}`}></div>
       
@@ -159,7 +164,6 @@ export default function TaskCard({ task, onEdit, onDelete }:  Props) {
         </div>
       </div>
 
-      <div className="absolute inset-0 border border-blue-300 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
     </div>
   );
 }

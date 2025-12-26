@@ -76,11 +76,30 @@ const handleDelete = async (id: string) => {
 };
 
 
-  const handleSaveEdit = (updatedTask: Task) => {
+  const handleSaveEdit = async (updatedTask: Task) => {
+    try {
+      const res = await fetch(`/api/task/${updatedTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedTask),
+      });
+
+      if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Erreur lors de la modification.");
+    }
+
     setTasks(prev =>
       prev.map(t => (t.id === updatedTask.id ? updatedTask : t))
     );
     closeModal();
+
+    }
+    catch (err: any) {
+      console.error("Erreur modification tâche :", err.message);
+      alert("Impossible de modifier la tâche : " + err.message);
+      return;
+    }
   };
 
 

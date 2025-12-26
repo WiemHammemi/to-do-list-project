@@ -42,7 +42,7 @@ export async function PATCH(request: Request, {params} :{ params: Promise<{ id: 
             description: body.description,
             status: body.status,
             priority: body.priority,
-            due_date: body.due_date ? body.due_date : null,
+            due_date: body.due_date ? new Date(body.due_date) : undefined,
             status_changed_at: body.status ? new Date() : undefined,
         },
     }); 
