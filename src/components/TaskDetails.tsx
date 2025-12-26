@@ -5,7 +5,7 @@ import UserAccountNav from '@/components/UserAccountNav';
 import { Task ,TaskPriority, TaskStatus} from '@/types/task';
 import { useTaskModal } from '@/hooks/useTaskModal';
 import DeleteTaskModal from './dashboard/modals/DeleteTaskModal';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
 import EditTaskModal from './dashboard/modals/EditTaskModal';
 
 
@@ -17,6 +17,7 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState(task);
+  const router = useRouter();
 
   const {
   selectedTask,
@@ -56,6 +57,24 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   if (task) setEditedTask(task);
 }, [task]);
 
+
+const handleDelete = async (id: string) => {
+  try {
+    const res = await fetch(`/api/task/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Erreur lors de la suppression");
+    }
+    closeModal();
+    router.push("/dashboard");
+  } catch (err: any) {
+    console.error("Erreur suppression tâche :", err.message);
+    alert("Impossible de supprimer la tâche : " + err.message);
+  }
+};
 
 
   const getPriorityColor = (priority: TaskPriority) => {
@@ -262,7 +281,7 @@ if (!task) {
 )}
 
 {modalType === "delete" && selectedTask && (
-  <DeleteTaskModal task={selectedTask} onClose={closeModal} onDelete={() => { router.push("/dashboard"); }}
+  <DeleteTaskModal task={selectedTask} onClose={closeModal} onDelete={handleDelete}
   />
 )}
 

@@ -57,10 +57,24 @@ const {
     }, []);
 
 
-  const handleDelete = (id: string) => {
+const handleDelete = async (id: string) => {
+  try {
+    const res = await fetch(`/api/task/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Erreur lors de la suppression");
+    }
     setTasks(prev => prev.filter(t => t.id !== id));
     closeModal();
-  };
+  } catch (err: any) {
+    console.error("Erreur suppression tâche :", err.message);
+    alert("Impossible de supprimer la tâche : " + err.message);
+  }
+};
+
 
   const handleSaveEdit = (updatedTask: Task) => {
     setTasks(prev =>
