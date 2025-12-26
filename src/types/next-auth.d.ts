@@ -1,4 +1,3 @@
-// types/next-auth.d.ts ou dans votre fichier de types existant
 
 import NextAuth from "next-auth";
 

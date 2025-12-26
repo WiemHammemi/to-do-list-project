@@ -1,7 +1,9 @@
 import TaskDetails from '@/components/TaskDetails';
 
-export default function TaskPage({ params }: { params: { id: string } }) {
+export default async  function TaskPage({ params }: { params: Promise<{ id: string }> }) {
+  const param = await params;
+
   return (
-  <TaskDetails taskId={params.id} />
+  <TaskDetails taskId={param.id} />
     ) ;
 }

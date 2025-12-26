@@ -1,8 +1,15 @@
+import { Task } from "@/types/task";
 import { X } from "lucide-react";
 import { useState } from "react";
 
-export default function EditTaskModal({ task, onClose , onSave}: any) {
-    const [form, setForm] = useState(task);
+interface Props {
+  task: Task;
+  onClose: () => void;
+  onSave: (task: Task) => void;
+}
+
+export default function EditTaskModal({ task, onClose , onSave}: Props) {
+    const [form, setForm] = useState<Task>(task);
 
     return(
                   <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -32,8 +39,8 @@ export default function EditTaskModal({ task, onClose , onSave}: any) {
                     Description
                   </label>
                   <textarea
-                    value={form.description}
-          onChange={e => setForm({ ...form, description: e.target.value })}
+                    value={form.description ?? ""}
+                   onChange={e => setForm({ ...form, description: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -46,7 +53,7 @@ export default function EditTaskModal({ task, onClose , onSave}: any) {
                     </label>
                     <select
                       value={form.status}
-                      onChange={e => setForm({ ...form, status: e.target.value })}
+                      onChange={e => setForm({ ...form, status: e.target.value as Task["status"] })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="pending">En attente</option>
@@ -61,7 +68,7 @@ export default function EditTaskModal({ task, onClose , onSave}: any) {
                     </label>
                     <select
                       value={form.priority}
-                      onChange={e => setForm({ ...form, priority: e.target.value })}
+                      onChange={e => setForm({ ...form, priority: e.target.value as Task["priority"] })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="high">Haute</option>

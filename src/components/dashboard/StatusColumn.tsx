@@ -1,7 +1,17 @@
 import TaskCard from "@/components/dashboard/TaskCard";
+import { Task } from "@/types/task";
 import { Plus, CheckCircle } from "lucide-react";
 
-export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, color}: any) {
+interface Props {
+  title: string;
+  icon: React.ReactNode;
+  tasks: Task[];
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+  color: string;
+}
+
+export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, color}: Props) {
 
   const getColorVariants = (colorClass: string) => {
     if (colorClass.includes('orange')) {
@@ -80,7 +90,7 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
 
       <div className="flex-1 space-y-4 overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {tasks.length > 0 ? (
-          tasks.map((task: any) => (
+          tasks.map((task: Task) => (
             <TaskCard
               key={task.id}
               task={task}

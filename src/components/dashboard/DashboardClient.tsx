@@ -6,14 +6,22 @@ import UserAccountNav from '@/components/UserAccountNav';
 import StatusColumn from '@/components/dashboard/StatusColumn';
 import EditTaskModal from '@/components/dashboard/modals/EditTaskModal';
 import DeleteTaskModal from '@/components/dashboard/modals/DeleteTaskModal';
+import { Task } from '@/types/task';
+import { useTaskModal } from '@/hooks/useTaskModal';
 
 export default function DashboardClient() {
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [modalType, setModalType] = useState<"edit" | "delete" | null>(null);
   
-const [tasks, setTasks] = useState<any[]>([]);
+const [tasks, setTasks] = useState<Task[]>([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState<string | null>(null);
+
+const {
+  selectedTask,
+  modalType,
+  openEdit,
+  openDelete,
+  closeModal
+} = useTaskModal();
 
   const pendingTasks = tasks.filter(t => t.status === 'pending');
   const progressTasks = tasks.filter(t => t.status === 'progress');
@@ -47,27 +55,14 @@ const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         fetchTasks();
     }, []);
-  const openEdit = (task: any) => {
-    setSelectedTask(task);
-    setModalType("edit");
-  };
 
-  const openDelete = (task: any) => {
-    setSelectedTask(task);
-    setModalType("delete");
-  };
 
-  const closeModal = () => {
-    setSelectedTask(null);
-    setModalType(null);
-  };
-
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
     closeModal();
   };
 
-  const handleSaveEdit = (updatedTask: any) => {
+  const handleSaveEdit = (updatedTask: Task) => {
     setTasks(prev =>
       prev.map(t => (t.id === updatedTask.id ? updatedTask : t))
     );

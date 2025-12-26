@@ -1,6 +1,12 @@
+import { Task } from "@/types/task";
 import { Trash2 } from "lucide-react";
 
-export default function DeleteTaskModal({ task, onDelete, onClose }: any) {
+interface Props {
+  task: Task;
+  onClose: () => void;
+  onDelete: (taskId: string) => void;
+}
+export default function DeleteTaskModal({ task, onDelete, onClose }: Props) {
 
     return(
          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

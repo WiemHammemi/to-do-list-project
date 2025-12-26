@@ -1,20 +1,43 @@
 'use client' ;
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Calendar, Flag, Clock, User, CheckCircle2, Edit, Trash2, MessageSquare, Paperclip, Activity } from 'lucide-react';
+import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
+import { Task ,TaskPriority, TaskStatus} from '@/types/task';
+import { useTaskModal } from '@/hooks/useTaskModal';
+import DeleteTaskModal from './dashboard/modals/DeleteTaskModal';
+import router from 'next/router';
+import EditTaskModal from './dashboard/modals/EditTaskModal';
 
 
-export default function TaskDetails(TaskId : any) {
+export default function TaskDetails({ taskId }: { taskId: string }) {
 
- const [task, setTask] = useState<any>(null);
+
+  const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTask, setEditedTask] = useState(task);
+
+  const {
+  selectedTask,
+  modalType,
+  openEdit,
+  openDelete,
+  closeModal
+} = useTaskModal();
+  
+  const [activities] = useState([
+    { id: 1, type: "status", message: "Statut changé de 'En attente' à 'En cours'", date: "2024-12-24T09:00:00" },
+    { id: 2, type: "comment", message: "Nouveau commentaire ajouté par Mohamed Ali", date: "2024-12-23T14:15:00" },
+    { id: 3, type: "priority", message: "Priorité changée à 'Haute'", date: "2024-12-22T16:20:00" },
+    { id: 4, type: "created", message: "Tâche créée par Ahmed Ben Salem", date: "2024-12-20T11:00:00" }
+  ]);
 
   useEffect(() => {
     const fetchTask = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/task/${TaskId}`);
+        const res = await fetch(`/api/task/${taskId}`);
         if (!res.ok) throw new Error("Erreur lors du chargement de la tâche");
         const data = await res.json();
         setTask(data);
@@ -26,20 +49,16 @@ export default function TaskDetails(TaskId : any) {
     };
 
     fetchTask();
-  }, [TaskId]);
+  }, []);
 
-  
-  const [activities] = useState([
-    { id: 1, type: "status", message: "Statut changé de 'En attente' à 'En cours'", date: "2024-12-24T09:00:00" },
-    { id: 2, type: "comment", message: "Nouveau commentaire ajouté par Mohamed Ali", date: "2024-12-23T14:15:00" },
-    { id: 3, type: "priority", message: "Priorité changée à 'Haute'", date: "2024-12-22T16:20:00" },
-    { id: 4, type: "created", message: "Tâche créée par Ahmed Ben Salem", date: "2024-12-20T11:00:00" }
-  ]);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTask, setEditedTask] = useState(task);
+  useEffect(() => {
+  if (task) setEditedTask(task);
+}, [task]);
 
-  const getPriorityColor = (priority: any) => {
+
+
+  const getPriorityColor = (priority: TaskPriority) => {
     switch(priority) {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -48,7 +67,7 @@ export default function TaskDetails(TaskId : any) {
     }
   };
 
-  const getStatusColor = (status: any) => {
+  const getStatusColor = (status: TaskStatus) => {
     switch(status) {
       case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'progress': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -57,7 +76,7 @@ export default function TaskDetails(TaskId : any) {
     }
   };
 
-  const getStatusLabel = (status: any) => {
+  const getStatusLabel = (status: TaskStatus) => {
     switch(status) {
       case 'pending': return 'En attente';
       case 'progress': return 'En cours';
@@ -66,7 +85,7 @@ export default function TaskDetails(TaskId : any) {
     }
   };
 
-  const getPriorityLabel = (priority: any) => {
+  const getPriorityLabel = (priority: TaskPriority) => {
     switch(priority) {
       case 'high': return 'Haute';
       case 'medium': return 'Moyenne';
@@ -81,15 +100,17 @@ export default function TaskDetails(TaskId : any) {
   };
 
   
-  const formatDate = (dateString: any) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
+const formatDate = (date?: string | null) => {
+  if (!date) return "—";
+  
+  return new Date(date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
 
-  const formatDateTime = (dateString: any) => {
+  const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('fr-FR', {
       day: 'numeric',
       month: 'short',
@@ -109,6 +130,17 @@ export default function TaskDetails(TaskId : any) {
     }
   };
 
+if (loading) {
+  return <div className="p-6">Chargement...</div>;
+}
+
+if (error) {
+  return <div className="p-6 text-red-600">{error}</div>;
+}
+
+if (!task) {
+  return <div className="p-6">Aucune tâche trouvée</div>;
+}
   return (
     <div className="min-h-screen bg-gray-50">
         <UserAccountNav/>
@@ -131,14 +163,14 @@ export default function TaskDetails(TaskId : any) {
             
             <div className="flex gap-2">
               <button
-                // onClick={() => onEdit(task)}
+                onClick={() => openEdit(task)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Edit size={18} />
                 Modifier
               </button>
               <button
-            //   onClick={()=>onDelete(task)}
+                onClick={() => openDelete(task)}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Trash2 size={18} />
@@ -217,6 +249,23 @@ export default function TaskDetails(TaskId : any) {
           </div>
         </div>
       </div>
+
+      {modalType === "edit" && selectedTask && (
+  <EditTaskModal
+    task={selectedTask}
+    onClose={closeModal}
+    onSave={(updatedTask) => {
+      setTask(updatedTask);
+      closeModal();
+    }}
+  />
+)}
+
+{modalType === "delete" && selectedTask && (
+  <DeleteTaskModal task={selectedTask} onClose={closeModal} onDelete={() => { router.push("/dashboard"); }}
+  />
+)}
+
 
     </div>
   );

@@ -16,7 +16,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const task = await prisma.task.findFirst({
-        where: { id: Number(id), user_id: Number(session.user.id) }
+        where: { id: Number(id) , user_id: Number(session.user.id) }
     });
 
     if (!task) {
@@ -63,13 +63,12 @@ export async function DELETE( request: Request,{ params }: { params: Promise<{ i
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const taskId = Number(id);
-  if (isNaN(taskId)) {
+  if (isNaN(Number(id))) {
     return NextResponse.json({ error: "ID invalide" }, { status: 400 });
   }
 
   const result = await prisma.task.deleteMany({
-    where: { id: taskId, user_id: Number(session.user.id) },
+    where: { id: Number(id), user_id: Number(session.user.id) },
   });
 
   if (result.count === 0) {

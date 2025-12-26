@@ -1,16 +1,23 @@
 import { Clock, Edit, Eye, Trash2, Flag, Calendar, MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Task, TaskPriority } from "@/types/task";
 
-export default function TaskCard({ task, onEdit, onDelete }: any) {
+interface Props {
+  task:  Task;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}
+
+export default function TaskCard({ task, onEdit, onDelete }:  Props) {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
 
-  const handleOnClick = (id: number) => {
+  const handleOnClick = (id: string) => {
     router.push(`/tasks/${id}`);
   };
 
-  const getPriorityConfig = (priority: string) => {
+  const getPriorityConfig = (priority: TaskPriority) => {
     switch(priority) {
       case 'high': 
         return { 
