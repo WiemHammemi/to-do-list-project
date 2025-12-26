@@ -1,8 +1,7 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Clock, AlertCircle, CheckCircle2, Plus, Filter, Search, Upload, Download, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Clock, AlertCircle, CheckCircle2, Plus, Filter, Search, Upload, Download, FileText, FileSpreadsheet, FileDown } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import StatusColumn from '@/components/dashboard/StatusColumn';
 import EditTaskModal from '@/components/dashboard/modals/EditTaskModal';
@@ -18,6 +17,8 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   const pendingTasks = tasks.filter(t => t.status === 'pending');
   const progressTasks = tasks.filter(t => t.status === 'progress');
@@ -69,6 +70,17 @@ export default function DashboardClient() {
 
   useEffect(() => {
     fetchTasks();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -190,29 +202,53 @@ export default function DashboardClient() {
     }
   };
 
-const exportStructure = async () => {
-  try {
-    const res = await fetch("/api/task/export-structure");
+  const exportStructure = async () => {
+    try {
+      const res = await fetch("/api/task/export-structure");
 
-    if (!res.ok) {
-      throw new Error("Erreur lors du téléchargement");
+      if (!res.ok) {
+        throw new Error("Erreur lors du téléchargement");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "structure.xlsx";
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      alert("Impossible de télécharger la structure");
     }
+  };
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
+  const exportData = async (format: 'excel' | 'pdf') => {
+    try {
+      const endpoint = format === 'excel' ? '/api/task/export-excel' : '/api/task/export-pdf';
+      const res = await fetch(endpoint);
+      
+      if (!res.ok) {
+        throw new Error("Erreur lors du téléchargement");
+      } 
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "structure.xlsx";
-    a.click();
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
 
-    window.URL.revokeObjectURL(url);
-  } catch (err: any) {
-    console.error(err);
-    alert("Impossible de télécharger la structure");
-  }
-};
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = format === 'excel' ? "tâches.xlsx" : "tâches.pdf";
+      a.click();
 
+      window.URL.revokeObjectURL(url);
+      setShowExportMenu(false);
+    } catch (err: any) {
+      console.error(err);
+      alert("Impossible de télécharger les données");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -231,26 +267,49 @@ const exportStructure = async () => {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                <Search size={18} className="text-gray-500" />
-                <span className="text-gray-700">Rechercher</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                <Filter size={18} className="text-gray-500" />
-                <span className="text-gray-700">Filtrer</span>
-              </button> */}
-
-              {/* <div className="h-8 w-px bg-gray-200"></div> */}
-
               <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <Upload size={18} className="text-emerald-500" />
                 <span className="text-gray-700">Importer</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
-                <Download size={18} className="text-blue-500" />
-                <span className="text-gray-700">Exporter</span>
-              </button>
-              <button onClick={() => exportStructure()}  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+
+              {/* Menu Export avec dropdown */}
+              <div className="relative" ref={exportMenuRef}>
+                <button 
+                  onClick={() => setShowExportMenu(!showExportMenu)} 
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  <Download size={18} className="text-blue-500" />
+                  <span className="text-gray-700">Exporter</span>
+                </button>
+
+                {showExportMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <button 
+                      onClick={() => exportData('excel')}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3 transition-colors"
+                    >
+                      <FileSpreadsheet size={18} className="text-green-600" />
+                      <div>
+                        <div className="font-medium">Exporter en Excel</div>
+                        <div className="text-xs text-gray-500">Format .xlsx</div>
+                      </div>
+                    </button>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button 
+                      onClick={() => exportData('pdf')}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                    >
+                      <FileDown size={18} className="text-red-600" />
+                      <div>
+                        <div className="font-medium">Exporter en PDF</div>
+                        <div className="text-xs text-gray-500">Format .pdf</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button onClick={() => exportStructure()} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <FileText size={18} className="text-purple-500" />
                 <span className="text-gray-700">Structure</span>
               </button>
