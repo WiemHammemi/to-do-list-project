@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,13 +9,19 @@ import EditTaskModal from '@/components/dashboard/modals/EditTaskModal';
 import DeleteTaskModal from '@/components/dashboard/modals/DeleteTaskModal';
 import { Task, TaskToAdd } from '@/types/task';
 import { useTaskModal } from '@/hooks/useTaskModal';
-import AddTaskModal from './modals/AddTaskModal';
+import AddTaskModal from '@/components/dashboard/modals/AddTaskModal';
+import TaskCard from '@/components/dashboard/TaskCard';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors} from '@dnd-kit/core';
 
 export default function DashboardClient() {
-
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const pendingTasks = tasks.filter(t => t.status === 'pending');
+  const progressTasks = tasks.filter(t => t.status === 'progress');
+  const completedTasks = tasks.filter(t => t.status === 'completed');
 
   const {
     selectedTask,
@@ -26,9 +33,13 @@ export default function DashboardClient() {
     closeModal
   } = useTaskModal();
 
-  const pendingTasks = tasks.filter(t => t.status === 'pending');
-  const progressTasks = tasks.filter(t => t.status === 'progress');
-  const completedTasks = tasks.filter(t => t.status === 'completed');
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, 
+      },
+    })
+  );
 
   const stats = {
     total: tasks.length,
@@ -55,10 +66,65 @@ export default function DashboardClient() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchTasks();
   }, []);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const task = tasks.find(t => t.id === active.id);
+    if (task) {
+      setActiveTask(task);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const newStatus = over.id as Task['status'];
+
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+
+    setTasks(prevTasks =>
+      prevTasks.map(t =>
+        t.id === taskId
+          ? { ...t, status: newStatus, status_changed_at: new Date().toISOString() }
+          : t
+      )
+    );
+
+    try {
+      const res = await fetch(`/api/task/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...task,
+          status: newStatus,
+          status_changed_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Erreur lors de la mise à jour");
+      }
+
+      await fetchTasks();
+    } catch (err: any) {
+      console.error("Erreur lors du changement de statut:", err.message);
+      alert("Impossible de changer le statut : " + err.message);
+      await fetchTasks();
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveTask(null);
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -78,7 +144,6 @@ export default function DashboardClient() {
     }
   };
 
-
   const handleSaveEdit = async (updatedTask: Task) => {
     try {
       const res = await fetch(`/api/task/${updatedTask.id}`, {
@@ -96,9 +161,7 @@ export default function DashboardClient() {
         prev.map(t => (t.id === updatedTask.id ? updatedTask : t))
       );
       closeModal();
-
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error("Erreur modification tâche :", err.message);
       alert("Impossible de modifier la tâche : " + err.message);
       return;
@@ -126,8 +189,6 @@ export default function DashboardClient() {
       alert("Impossible d'ajouter la tâche : " + err.message);
     }
   };
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -178,8 +239,6 @@ export default function DashboardClient() {
               </button>
             </div>
           </div>
-
-
         </div>
 
         {loading && (
@@ -195,11 +254,57 @@ export default function DashboardClient() {
         )}
 
         {!loading && !error && tasks.length > 0 && (
-          <div className="flex gap-6 overflow-x-auto pb-6">
-            <StatusColumn title="En attente" tasks={pendingTasks} onClick={() => openAddTaskModal("pending")} onEdit={openEdit} onDelete={openDelete} icon={<AlertCircle size={20} className="text-amber-600" />} color="bg-amber-50" />
-            <StatusColumn title="En cours" tasks={progressTasks} onClick={() => openAddTaskModal("progress")} onEdit={openEdit} onDelete={openDelete} icon={<Clock size={20} className="text-blue-600" />} color="bg-blue-50" />
-            <StatusColumn title="Terminées" tasks={completedTasks} onClick={() => openAddTaskModal("completed")} onEdit={openEdit} onDelete={openDelete} icon={<CheckCircle2 size={20} className="text-green-600" />} color="bg-green-50" />
-          </div>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <div className="flex gap-6 overflow-x-auto pb-6">
+              <StatusColumn
+                title="En attente"
+                tasks={pendingTasks}
+                onClick={() => openAddTaskModal("pending")}
+                onEdit={openEdit}
+                onDelete={openDelete}
+                icon={<AlertCircle size={20} className="text-amber-600" />}
+                color="bg-amber-50"
+                columnId="pending"
+              />
+              <StatusColumn
+                title="En cours"
+                tasks={progressTasks}
+                onClick={() => openAddTaskModal("progress")}
+                onEdit={openEdit}
+                onDelete={openDelete}
+                icon={<Clock size={20} className="text-blue-600" />}
+                color="bg-blue-50"
+                columnId="progress"
+              />
+              <StatusColumn
+                title="Terminées"
+                tasks={completedTasks}
+                onClick={() => openAddTaskModal("completed")}
+                onEdit={openEdit}
+                onDelete={openDelete}
+                icon={<CheckCircle2 size={20} className="text-green-600" />}
+                color="bg-green-50"
+                columnId="completed"
+              />
+            </div>
+
+            <DragOverlay>
+              {activeTask ? (
+                <div className="opacity-80 rotate-3 scale-105">
+                  <TaskCard
+                    task={activeTask}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
 

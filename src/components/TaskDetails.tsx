@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity } from 'lucide-react';
+import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { useTaskModal } from '@/hooks/useTaskModal';
 import DeleteTaskModal from './dashboard/modals/DeleteTaskModal';
 import { useRouter } from 'next/navigation';
 import EditTaskModal from './dashboard/modals/EditTaskModal';
+import { getUrgencyIndicator } from '@/utils/taskDates';
 
 
 export default function TaskDetails({ taskId }: { taskId: string }) {
@@ -17,6 +18,7 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [editedTask, setEditedTask] = useState(task);
   const router = useRouter();
+  
 
   const {
     selectedTask,
@@ -168,6 +170,8 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
       default: return <Activity size={16} className="text-gray-600" />;
     }
   };
+    const urgencyIndicator = task ? getUrgencyIndicator(task) : null;
+
 
   if (loading) {
     return <div className="p-6">Chargement...</div>;
@@ -198,6 +202,9 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
                 Priorité {getPriorityLabel(task.priority)}
               </span>
             </div>
+
+
+
           </div>
 
           <div className="flex gap-2">
@@ -264,6 +271,18 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
                     <span className="text-sm font-medium">Date d'échéance</span>
                   </div>
                   <p className="text-gray-900 ml-6">{formatDate(task.due_date)}</p>
+                              {urgencyIndicator && (
+  <div
+    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
+    ${urgencyIndicator.bg} ${urgencyIndicator.text}
+    shadow-md ${urgencyIndicator.pulse ? 'animate-pulse' : ''}`}
+  >
+    <urgencyIndicator.icon size={16} />
+    <span className="text-sm font-semibold">
+      {urgencyIndicator.label} {urgencyIndicator.sublabel}
+    </span>
+  </div>
+)}
                 </div>
 
                 <div>

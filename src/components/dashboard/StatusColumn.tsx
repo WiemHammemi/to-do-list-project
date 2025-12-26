@@ -1,6 +1,8 @@
+
 import TaskCard from "@/components/dashboard/TaskCard";
 import { Task } from "@/types/task";
 import { Plus, CheckCircle } from "lucide-react";
+import { useDroppable } from '@dnd-kit/core';
 
 interface Props {
   title: string;
@@ -10,13 +12,26 @@ interface Props {
   onDelete: (task: Task) => void;
   color: string;
   onClick: () => void;
+  columnId: string;
 }
 
-export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, color, onClick }: Props) {
+export default function StatusColumn({
+  title,
+  icon,
+  tasks,
+  onEdit,
+  onDelete,
+  color,
+  onClick,
+  columnId
+}: Props) {
 
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnId,
+  });
 
   const getColorVariants = (colorClass: string) => {
-    if (colorClass.includes('orange')) {
+    if (colorClass.includes('orange') || colorClass.includes('amber')) {
       return {
         light: 'bg-amber-50',
         border: 'border-amber-200',
@@ -57,8 +72,13 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
   const colors = getColorVariants(color);
 
   return (
-    <div className="flex-1 min-w-[320px] flex flex-col bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-
+    <div
+      ref={setNodeRef}
+      className={`flex-1 min-w-[320px] flex flex-col bg-white rounded-2xl p-6 shadow-sm border-1 transition-all duration-200 ${isOver
+          ? `${colors.border} ring-1 ring-${colors.badge}/20 scale-[1.02]`
+          : 'border-gray-200'
+        }`}
+    >
       <div className={`bg-gradient-to-br ${colors.gradient} rounded-xl p-4 mb-4 border-2 ${colors.border} ${colors.shadow} shadow-md`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
@@ -101,21 +121,28 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
             />
           ))
         ) : (
-          <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-8 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={32} className="text-gray-400" />
+          <div className={`bg-white rounded-xl border-2 border-dashed ${isOver ? colors.border : 'border-gray-200'
+            } p-8 text-center transition-colors`}>
+            <div className={`w-16 h-16 ${isOver ? colors.light : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-4 transition-colors`}>
+              <CheckCircle size={32} className={isOver ? colors.text : 'text-gray-400'} />
             </div>
-            <p className="text-gray-500 font-medium mb-1">Aucune tâche</p>
-            <p className="text-gray-400 text-sm">Cette colonne est vide</p>
+            <p className={`${isOver ? colors.text : 'text-gray-500'} font-medium mb-1 transition-colors`}>
+              {isOver ? 'Déposer ici' : 'Aucune tâche'}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {isOver ? 'Relâchez pour changer le statut' : 'Cette colonne est vide'}
+            </p>
           </div>
         )}
       </div>
 
-      <button onClick={onClick} className={`mt-4 w-full py-3 border-2 border-dashed ${colors.border} ${colors.light} hover:bg-white rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${colors.text} font-medium hover:shadow-md group`}>
+      <button
+        onClick={onClick}
+        className={`mt-4 w-full py-3 border-2 border-dashed ${colors.border} ${colors.light} hover:bg-white rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${colors.text} font-medium hover:shadow-md group`}
+      >
         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
         <span>Ajouter une tâche</span>
       </button>
     </div>
   );
 }
-
