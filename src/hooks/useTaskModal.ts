@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Task } from "@/types/task";
+import { Task, TaskStatus } from "@/types/task";
 
-export type TaskModalType = "edit" | "delete" | null;
+export type TaskModalType = "edit" | "delete" | "add" | null;
 
 export function useTaskModal() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [modalType, setModalType] = useState<TaskModalType>(null);
+  const [modalProps, setModalProps] = useState<{ status?: TaskStatus } | null>(null);
 
   const openEdit = (task: Task) => {
     setSelectedTask(task);
@@ -22,11 +23,17 @@ export function useTaskModal() {
     setModalType(null);
   };
 
+  const openAddTaskModal = (status?: TaskStatus) => {
+    setModalType("add");
+    setModalProps({ status });
+  }
   return {
     selectedTask,
     modalType,
+    modalProps,
     openEdit,
     openDelete,
     closeModal,
+    openAddTaskModal
   };
 }

@@ -10,9 +10,9 @@ export default function TwoFASection() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(""); 
+  const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  
+
   const [twoFASettings, setTwoFASettings] = useState({
     enabled: false,
     type: "", // "authenticator", "email", "sms"
@@ -156,222 +156,220 @@ export default function TwoFASection() {
 
 
   return (
-<>
-      
-        {/* Messages */}
-        {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
-            {success}
-          </div>
-        )}
+    <>
 
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-            <XCircle className="w-5 h-5" />
-            {error}
-          </div>
-        )}
+      {/* Messages */}
+      {success && (
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <CheckCircle className="w-5 h-5" />
+          {success}
+        </div>
+      )}
 
-        {/* Section Sécurité */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-6 h-6 text-indigo-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Sécurité</h2>
-          </div>
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <XCircle className="w-5 h-5" />
+          {error}
+        </div>
+      )}
 
-          {/* Statut 2FA */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-900">
-                  Authentification à deux facteurs (2FA)
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {twoFASettings.enabled
-                    ? `Activée via ${
-                        twoFASettings.type === "authenticator"
-                          ? "Google Authenticator"
-                          : twoFASettings.type === "email"
-                          ? "Email"
-                          : "SMS"
-                      }`
-                    : "Désactivée"}
-                </p>
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  twoFASettings.enabled
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
+      {/* Section Sécurité */}
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Shield className="w-6 h-6 text-indigo-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Sécurité</h2>
+        </div>
+
+        {/* Statut 2FA */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900">
+                Authentification à deux facteurs (2FA)
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {twoFASettings.enabled
+                  ? `Activée via ${twoFASettings.type === "authenticator"
+                    ? "Google Authenticator"
+                    : twoFASettings.type === "email"
+                      ? "Email"
+                      : "SMS"
+                  }`
+                  : "Désactivée"}
+              </p>
+            </div>
+            <div
+              className={`px-3 py-1 rounded-full text-sm font-medium ${twoFASettings.enabled
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
                 }`}
-              >
-                {twoFASettings.enabled ? "Activée" : "Désactivée"}
+            >
+              {twoFASettings.enabled ? "Activée" : "Désactivée"}
+            </div>
+          </div>
+        </div>
+
+        {/* Configuration 2FA */}
+        {!showSetup && !twoFASettings.enabled && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Choisissez une méthode d'authentification
+            </h3>
+
+            {/* Google Authenticator */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition cursor-pointer">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-indigo-50 rounded-lg">
+                  <Key className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900">
+                    Google Authenticator
+                  </h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Utilisez une application d'authentification comme Google
+                    Authenticator ou Authy
+                  </p>
+                  <button
+                    onClick={() => handleEnable2FA("authenticator")}
+                    disabled={loading}
+                    className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium transition"
+                  >
+                    {loading && selectedMethod === "authenticator"
+                      ? "Configuration..."
+                      : "Configurer"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition cursor-pointer">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Mail className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900">Email</h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Recevez un code de vérification par email
+                  </p>
+                  <button
+                    onClick={() => handleEnable2FA("email")}
+                    disabled={loading}
+                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium transition"
+                  >
+                    {loading && selectedMethod === "email"
+                      ? "Configuration..."
+                      : "Configurer"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* SMS */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition cursor-pointer">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-green-50 rounded-lg">
+                  <Smartphone className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900">SMS</h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Recevez un code de vérification par SMS
+                  </p>
+                  <button
+                    onClick={() => handleEnable2FA("sms")}
+                    disabled={loading}
+                    className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium transition"
+                  >
+                    {loading && selectedMethod === "sms"
+                      ? "Configuration..."
+                      : "Configurer"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Configuration 2FA */}
-          {!showSetup && !twoFASettings.enabled && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Choisissez une méthode d'authentification
-              </h3>
+        {/* Setup 2FA */}
+        {showSetup && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Configuration de l'authentification
+            </h3>
 
-              {/* Google Authenticator */}
-              <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition cursor-pointer">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-indigo-50 rounded-lg">
-                    <Key className="w-6 h-6 text-indigo-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">
-                      Google Authenticator
-                    </h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Utilisez une application d'authentification comme Google
-                      Authenticator ou Authy
-                    </p>
-                    <button
-                      onClick={() => handleEnable2FA("authenticator")}
-                      disabled={loading}
-                      className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium transition"
-                    >
-                      {loading && selectedMethod === "authenticator"
-                        ? "Configuration..."
-                        : "Configurer"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition cursor-pointer">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Mail className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">Email</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Recevez un code de vérification par email
-                    </p>
-                    <button
-                      onClick={() => handleEnable2FA("email")}
-                      disabled={loading}
-                      className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium transition"
-                    >
-                      {loading && selectedMethod === "email"
-                        ? "Configuration..."
-                        : "Configurer"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* SMS */}
-              <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition cursor-pointer">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <Smartphone className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">SMS</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Recevez un code de vérification par SMS
-                    </p>
-                    <button
-                      onClick={() => handleEnable2FA("sms")}
-                      disabled={loading}
-                      className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium transition"
-                    >
-                      {loading && selectedMethod === "sms"
-                        ? "Configuration..."
-                        : "Configurer"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Setup 2FA */}
-          {showSetup && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Configuration de l'authentification
-              </h3>
-
-              {selectedMethod === "authenticator" && qrCode && (
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-4">
-                    Scannez ce QR code avec votre application d'authentification
-                  </p>
-                  <div className="inline-block p-4 bg-white border-2 border-gray-200 rounded-lg">
-                    <img src={qrCode} alt="QR Code" className="w-64 h-64" />
-                  </div>
-                </div>
-              )}
-
-              {(selectedMethod === "email" || selectedMethod === "sms") && (
-                <p className="text-sm text-gray-600 text-center p-4 bg-blue-50 rounded-lg">
-                  Un code de vérification a été envoyé à votre{" "}
-                  {selectedMethod === "email" ? "adresse email" : "numéro de téléphone"}
+            {selectedMethod === "authenticator" && qrCode && (
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-4">
+                  Scannez ce QR code avec votre application d'authentification
                 </p>
-              )}
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Code de vérification
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-center text-2xl tracking-widest"
-                  placeholder="000000"
-                />
+                <div className="inline-block p-4 bg-white border-2 border-gray-200 rounded-lg">
+                  <img src={qrCode} alt="QR Code" className="w-64 h-64" />
+                </div>
               </div>
+            )}
 
-              <div className="flex gap-3">
-                <button
-                  onClick={handleVerify2FA}
-                  disabled={loading || verificationCode.length !== 6}
-                  className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  {loading ? "Vérification..." : "Vérifier et activer"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowSetup(false);
-                    setQrCode("");
-                    setVerificationCode("");
-                    setError("");
-                  }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          )}
+            {(selectedMethod === "email" || selectedMethod === "sms") && (
+              <p className="text-sm text-gray-600 text-center p-4 bg-blue-50 rounded-lg">
+                Un code de vérification a été envoyé à votre{" "}
+                {selectedMethod === "email" ? "adresse email" : "numéro de téléphone"}
+              </p>
+            )}
 
-          {/* Désactiver 2FA */}
-          {twoFASettings.enabled && (
             <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Code de vérification
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-center text-2xl tracking-widest"
+                placeholder="000000"
+              />
+            </div>
+
+            <div className="flex gap-3">
               <button
-                onClick={handleDisable2FA}
-                disabled={loading}
-                className="w-full bg-red-600 text-white py-3 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 transition"
+                onClick={handleVerify2FA}
+                disabled={loading || verificationCode.length !== 6}
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
-                {loading ? "Désactivation..." : "Désactiver l'authentification à deux facteurs"}
+                {loading ? "Vérification..." : "Vérifier et activer"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSetup(false);
+                  setQrCode("");
+                  setVerificationCode("");
+                  setError("");
+                }}
+                className="px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
+              >
+                Annuler
               </button>
             </div>
-          )}
-        </div>
- 
-        
-      </>
+          </div>
+        )}
+
+        {/* Désactiver 2FA */}
+        {twoFASettings.enabled && (
+          <div className="mt-6">
+            <button
+              onClick={handleDisable2FA}
+              disabled={loading}
+              className="w-full bg-red-600 text-white py-3 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 transition"
+            >
+              {loading ? "Désactivation..." : "Désactiver l'authentification à deux facteurs"}
+            </button>
+          </div>
+        )}
+      </div>
+
+
+    </>
   );
 }

@@ -10,7 +10,7 @@ import * as QRCode from "qrcode";
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-   
+
 
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     } else if (method === "email") {
       // Générer un code à 6 chiffres
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
+
       // Stocker le code temporairement (avec expiration de 10 minutes)
       await prisma.users.update({
         where: { id: user.id },
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       });
     } else if (method === "sms") {
       if (!user.phoneNumber) {
-        return NextResponse.json( 
+        return NextResponse.json(
           { error: "Aucun numéro de téléphone enregistré. Veuillez ajouter un numéro dans votre profil." },
           { status: 400 }
         );
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
       // Générer un code à 6 chiffres
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
+
       // Stocker le code temporairement
       await prisma.users.update({
         where: { id: user.id },

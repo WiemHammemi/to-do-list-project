@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
-  
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const skipTwoFA = (credentials as any).skipTwoFA === "true";
-        
+
         if (user.twoFAEnabled && !skipTwoFA) {
           throw new Error("2FA_REQUIRED");
         }
@@ -47,7 +47,7 @@ export const authOptions: NextAuthOptions = {
           id: String(user.id),
           name: user.name,
           email: user.email,
-          phoneNumber: user.phoneNumber, 
+          phoneNumber: user.phoneNumber,
         };
       }
     }),

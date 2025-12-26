@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (user.twoFAType === "email" || user.twoFAType === "sms") {
       // Générer un nouveau code
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
+
       // Stocker le code avec un timestamp pour expiration 
       await prisma.users.update({
         where: { id: user.id },

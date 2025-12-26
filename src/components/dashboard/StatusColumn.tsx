@@ -9,9 +9,11 @@ interface Props {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   color: string;
+  onClick: () => void;
 }
 
-export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, color}: Props) {
+export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, color, onClick }: Props) {
+
 
   const getColorVariants = (colorClass: string) => {
     if (colorClass.includes('orange')) {
@@ -70,7 +72,7 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
               </p>
             </div>
           </div>
-          
+
           <div className={`${colors.badge} text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md`}>
             {tasks.length}
           </div>
@@ -79,7 +81,7 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
         {tasks.length > 0 && (
           <div className="mt-3">
             <div className="h-1.5 bg-white rounded-full overflow-hidden shadow-inner">
-              <div 
+              <div
                 className={`h-full ${colors.badge} transition-all duration-500 rounded-full`}
                 style={{ width: `${Math.min((tasks.length / 10) * 100, 100)}%` }}
               ></div>
@@ -109,7 +111,7 @@ export default function StatusColumn({ title, icon, tasks, onEdit, onDelete, col
         )}
       </div>
 
-      <button className={`mt-4 w-full py-3 border-2 border-dashed ${colors.border} ${colors.light} hover:bg-white rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${colors.text} font-medium hover:shadow-md group`}>
+      <button onClick={onClick} className={`mt-4 w-full py-3 border-2 border-dashed ${colors.border} ${colors.light} hover:bg-white rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${colors.text} font-medium hover:shadow-md group`}>
         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
         <span>Ajouter une tâche</span>
       </button>

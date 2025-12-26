@@ -44,15 +44,15 @@ export async function POST(req: NextRequest) {
     } else if ((user.twoFAType === "email" || user.twoFAType === "sms") && user.twoFASecret) {
 
       isValid = user.twoFASecret === code;
-      
+
       // Nettoyer le code après vérification réussie
       if (isValid) {
         await prisma.users.update({
           where: { id: user.id },
           data: {
-             twoFASecret: null ,  
-             twoFAVerifiedAt: new Date(),
-            },
+            twoFASecret: null,
+            twoFAVerifiedAt: new Date(),
+          },
         });
       }
     }
