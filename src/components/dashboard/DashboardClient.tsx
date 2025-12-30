@@ -11,6 +11,7 @@ import { useTaskModal } from '@/hooks/useTaskModal';
 import AddTaskModal from '@/components/dashboard/modals/AddTaskModal';
 import TaskCard from '@/components/dashboard/TaskCard';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors} from '@dnd-kit/core';
+import ExcelImportModal from '@/components/dashboard/modals/ExcelImportModal';
 
 export default function DashboardClient() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,6 +32,7 @@ export default function DashboardClient() {
     openEdit,
     openDelete,
     openAddTaskModal,
+    openImportTaskModal,
     closeModal
   } = useTaskModal();
 
@@ -250,6 +252,10 @@ export default function DashboardClient() {
     }
   };
 
+  const handleImport = () => {
+      alert("Importer des données");
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
       <div className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-200">
@@ -267,7 +273,7 @@ export default function DashboardClient() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+              <button onClick={() => openImportTaskModal() } className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <Upload size={18} className="text-emerald-500" />
                 <span className="text-gray-700">Importer</span>
               </button>
@@ -401,6 +407,10 @@ export default function DashboardClient() {
 
       {modalType === "add" && (
         <AddTaskModal onClose={closeModal} onCreate={handleCreate} defaultStatus={modalProps?.status} />
+      )}
+
+       {modalType === "import" && (
+        <ExcelImportModal onClose={closeModal} onSuccess={handleImport} />
       )}
     </div>
   );
