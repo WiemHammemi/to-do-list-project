@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
@@ -8,17 +8,16 @@ import DeleteTaskModal from './dashboard/modals/DeleteTaskModal';
 import { useRouter } from 'next/navigation';
 import EditTaskModal from './dashboard/modals/EditTaskModal';
 import { getUrgencyIndicator } from '@/utils/taskDates';
-
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchTasks, updateTask, deleteTask } from '@/store/slices/taskSlice';
 
 export default function TaskDetails({ taskId }: { taskId: string }) {
-
-
-  const [task, setTask] = useState<Task | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editedTask, setEditedTask] = useState(task);
+  const dispatch = useAppDispatch();
   const router = useRouter();
+  const { tasks, loading, error } = useAppSelector((state) => state.tasks);
   
+  // Trouver la tâche dans le store Redux
+  const task = tasks.find(t => t.id === taskId);
 
   const {
     selectedTask,
@@ -28,80 +27,40 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
     closeModal
   } = useTaskModal();
 
-  const [activities] = useState([
+  const activities = [
     { id: 1, type: "status", message: "Statut changé de 'En attente' à 'En cours'", date: "2024-12-24T09:00:00" },
     { id: 2, type: "comment", message: "Nouveau commentaire ajouté par Mohamed Ali", date: "2024-12-23T14:15:00" },
     { id: 3, type: "priority", message: "Priorité changée à 'Haute'", date: "2024-12-22T16:20:00" },
     { id: 4, type: "created", message: "Tâche créée par Ahmed Ben Salem", date: "2024-12-20T11:00:00" }
-  ]);
+  ];
 
   useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/task/${taskId}`);
-        if (!res.ok) throw new Error("Erreur lors du chargement de la tâche");
-        const data = await res.json();
-        setTask(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTask();
-  }, []);
-
-
-  useEffect(() => {
-    if (task) setEditedTask(task);
-  }, [task]);
-
+    // Charger les tâches si elles ne sont pas déjà en mémoire
+    if (tasks.length === 0) {
+      dispatch(fetchTasks());
+    }
+  }, [dispatch, tasks.length]);
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/task/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
+      await dispatch(deleteTask(id)).unwrap();
       closeModal();
       router.push("/dashboard");
     } catch (err: any) {
-      console.error("Erreur suppression tâche :", err.message);
-      alert("Impossible de supprimer la tâche : " + err.message);
+      console.error("Erreur suppression tâche :", err);
+      alert("Impossible de supprimer la tâche : " + err);
     }
   };
 
   const handleSaveEdit = async (updatedTask: Task) => {
     try {
-      const res = await fetch(`/api/task/${updatedTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedTask),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de la modification.");
-      }
-      setTask(updatedTask);
+      await dispatch(updateTask(updatedTask)).unwrap();
       closeModal();
-
-    }
-    catch (err: any) {
-      console.error("Erreur modification tâche :", err.message);
-      alert("Impossible de modifier la tâche : " + err.message);
-      return;
+    } catch (err: any) {
+      console.error("Erreur modification tâche :", err);
+      alert("Impossible de modifier la tâche : " + err);
     }
   };
-
-
-
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
@@ -139,11 +98,8 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
     }
   };
 
-
-
   const formatDate = (date?: string | null) => {
     if (!date) return "—";
-
     return new Date(date).toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
@@ -170,8 +126,8 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
       default: return <Activity size={16} className="text-gray-600" />;
     }
   };
-    const urgencyIndicator = task ? getUrgencyIndicator(task) : null;
 
+  const urgencyIndicator = task ? getUrgencyIndicator(task) : null;
 
   if (loading) {
     return <div className="p-6">Chargement...</div>;
@@ -184,13 +140,12 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   if (!task) {
     return <div className="p-6">Aucune tâche trouvée</div>;
   }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <UserAccountNav />
-      {/* Header */}
+      
       <div className="max-w-7xl mx-auto px-6 py-4">
-
-
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
@@ -202,9 +157,6 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
                 Priorité {getPriorityLabel(task.priority)}
               </span>
             </div>
-
-
-
           </div>
 
           <div className="flex gap-2">
@@ -228,14 +180,11 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
               <p className="text-gray-700 leading-relaxed">{task.description}</p>
             </div>
-
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -259,30 +208,28 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
           </div>
 
           <div className="space-y-6">
-
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations</h3>
 
               <div className="space-y-4">
-
                 <div>
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
                     <Calendar size={18} />
                     <span className="text-sm font-medium">Date d'échéance</span>
                   </div>
                   <p className="text-gray-900 ml-6">{formatDate(task.due_date)}</p>
-                              {urgencyIndicator && (
-  <div
-    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
-    ${urgencyIndicator.bg} ${urgencyIndicator.text}
-    shadow-md ${urgencyIndicator.pulse ? 'animate-pulse' : ''}`}
-  >
-    <urgencyIndicator.icon size={16} />
-    <span className="text-sm font-semibold">
-      {urgencyIndicator.label} {urgencyIndicator.sublabel}
-    </span>
-  </div>
-)}
+                  {urgencyIndicator && (
+                    <div
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg mt-2 ml-6
+                      ${urgencyIndicator.bg} ${urgencyIndicator.text}
+                      shadow-md ${urgencyIndicator.pulse ? 'animate-pulse' : ''}`}
+                    >
+                      <urgencyIndicator.icon size={16} />
+                      <span className="text-sm font-semibold">
+                        {urgencyIndicator.label} {urgencyIndicator.sublabel}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -302,8 +249,6 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
                 </div>
               </div>
             </div>
-
-
           </div>
         </div>
       </div>
@@ -317,11 +262,12 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
       )}
 
       {modalType === "delete" && selectedTask && (
-        <DeleteTaskModal task={selectedTask} onClose={closeModal} onDelete={handleDelete}
+        <DeleteTaskModal 
+          task={selectedTask} 
+          onClose={closeModal} 
+          onDelete={handleDelete}
         />
       )}
-
-
     </div>
   );
 }

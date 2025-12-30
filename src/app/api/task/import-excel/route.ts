@@ -185,6 +185,7 @@ export async function POST(request: Request) {
             skipped,
             total: data.length,
             errors: errors.map(e => `Ligne ${e.row} (${e.field}): ${e.message}`),
+            createdTasks: tasksToCreate,
         });
 
     } catch (error: any) {

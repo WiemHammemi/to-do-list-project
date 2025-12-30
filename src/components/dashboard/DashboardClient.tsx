@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Clock, AlertCircle, CheckCircle2, Plus, Filter, Search, Upload, Download, FileText, FileSpreadsheet, FileDown } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Clock, AlertCircle, CheckCircle2, Plus, Upload, Download, FileText, FileSpreadsheet, FileDown } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import StatusColumn from '@/components/dashboard/StatusColumn';
 import EditTaskModal from '@/components/dashboard/modals/EditTaskModal';
@@ -12,11 +12,13 @@ import AddTaskModal from '@/components/dashboard/modals/AddTaskModal';
 import TaskCard from '@/components/dashboard/TaskCard';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors} from '@dnd-kit/core';
 import ExcelImportModal from '@/components/dashboard/modals/ExcelImportModal';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchTasks, createTask, updateTask, deleteTask, updateTaskStatus } from '@/store/slices/taskSlice';
+import { useState } from 'react';
 
 export default function DashboardClient() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { tasks, loading, error } = useAppSelector((state) => state.tasks);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
@@ -52,27 +54,10 @@ export default function DashboardClient() {
     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0
   };
 
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/task");
-
-      if (!res.ok) {
-        throw new Error("Erreur lors du chargement des tâches");
-      }
-
-      const data = await res.json();
-      setTasks(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Charger les tâches au montage du composant
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    dispatch(fetchTasks());
+  }, [dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -105,34 +90,11 @@ export default function DashboardClient() {
     const task = tasks.find(t => t.id === taskId);
     if (!task || task.status === newStatus) return;
 
-    setTasks(prevTasks =>
-      prevTasks.map(t =>
-        t.id === taskId
-          ? { ...t, status: newStatus, status_changed_at: new Date().toISOString() }
-          : t
-      )
-    );
-
     try {
-      const res = await fetch(`/api/task/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...task,
-          status: newStatus,
-          status_changed_at: new Date().toISOString(),
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Erreur lors de la mise à jour");
-      }
-
-      await fetchTasks();
+      await dispatch(updateTaskStatus({ taskId, status: newStatus })).unwrap();
     } catch (err: any) {
-      console.error("Erreur lors du changement de statut:", err.message);
-      alert("Impossible de changer le statut : " + err.message);
-      await fetchTasks();
+      console.error("Erreur lors du changement de statut:", err);
+      alert("Impossible de changer le statut : " + err);
     }
   };
 
@@ -142,65 +104,31 @@ export default function DashboardClient() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/task/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
-      setTasks(prev => prev.filter(t => t.id !== id));
+      await dispatch(deleteTask(id)).unwrap();
       closeModal();
     } catch (err: any) {
-      console.error("Erreur suppression tâche :", err.message);
-      alert("Impossible de supprimer la tâche : " + err.message);
+      console.error("Erreur suppression tâche :", err);
+      alert("Impossible de supprimer la tâche : " + err);
     }
   };
 
   const handleSaveEdit = async (updatedTask: Task) => {
     try {
-      const res = await fetch(`/api/task/${updatedTask.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedTask),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de la modification.");
-      }
-
-      setTasks(prev =>
-        prev.map(t => (t.id === updatedTask.id ? updatedTask : t))
-      );
+      await dispatch(updateTask(updatedTask)).unwrap();
       closeModal();
     } catch (err: any) {
-      console.error("Erreur modification tâche :", err.message);
-      alert("Impossible de modifier la tâche : " + err.message);
-      return;
+      console.error("Erreur modification tâche :", err);
+      alert("Impossible de modifier la tâche : " + err);
     }
   };
 
   const handleCreate = async (form: TaskToAdd) => {
     try {
-      const res = await fetch("/api/task", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de l'ajout de la tâche");
-      }
-
-      const newTask: Task = await res.json();
-
-      setTasks(prev => [...prev, newTask]);
+      await dispatch(createTask(form)).unwrap();
       closeModal();
     } catch (err: any) {
-      console.error("Erreur d'ajout du tâche :", err.message);
-      alert("Impossible d'ajouter la tâche : " + err.message);
+      console.error("Erreur d'ajout de la tâche :", err);
+      alert("Impossible d'ajouter la tâche : " + err);
     }
   };
 
@@ -252,9 +180,10 @@ export default function DashboardClient() {
     }
   };
 
-  const handleImport = () => {
-      alert("Importer des données");
-  }
+  const handleImportSuccess = () => {
+    // Recharger les tâches après un import réussi
+    dispatch(fetchTasks());
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -278,7 +207,6 @@ export default function DashboardClient() {
                 <span className="text-gray-700">Importer</span>
               </button>
 
-              {/* Menu Export avec dropdown */}
               <div className="relative" ref={exportMenuRef}>
                 <button 
                   onClick={() => setShowExportMenu(!showExportMenu)} 
@@ -410,7 +338,7 @@ export default function DashboardClient() {
       )}
 
        {modalType === "import" && (
-        <ExcelImportModal onClose={closeModal} onSuccess={handleImport} />
+        <ExcelImportModal onClose={closeModal} onSuccess={handleImportSuccess} />
       )}
     </div>
   );
