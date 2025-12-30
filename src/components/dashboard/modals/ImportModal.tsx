@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { Upload, X, AlertCircle, CheckCircle, Download } from 'lucide-react';
 
+import React, { useState, useRef } from 'react';
+import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
+export default function ExcelImportModal({ onClose, onSuccess }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -16,13 +16,14 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
   const [step, setStep] = useState(1);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
   const [detectedColumns, setDetectedColumns] = useState<string[]>([]);
+  const [validationResult, setValidationResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const requiredFields = [
     { key: 'title', label: 'Titre', required: true },
     { key: 'status', label: 'Statut', required: true },
     { key: 'priority', label: 'Priorité', required: true },
-    { key: 'due_date', label: 'Date d\'échéance', required: true },
+    { key: 'due_date', label: "Date d'échéance", required: true },
     { key: 'description', label: 'Description', required: false },
   ];
 
@@ -37,11 +38,10 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
 
     setFile(selectedFile);
     setErrors([]);
-    
 
     const formData = new FormData();
     formData.append('file', selectedFile);
-    
+
     try {
       setLoading(true);
       const response = await fetch('/api/task/import-preview', {
@@ -52,7 +52,7 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'analyse du fichier');
+        throw new Error(data.error || "Erreur lors de l'analyse du fichier");
       }
 
       setDetectedColumns(data.columns);
@@ -60,14 +60,13 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
       setColumnMapping(data.suggestedMapping || {});
       setStep(2);
     } catch (err) {
-      setErrors([err instanceof Error ? err.message : 'Erreur lors de l\'analyse du fichier']);
+      setErrors([err instanceof Error ? err.message : "Erreur lors de l'analyse du fichier"]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImport = async () => {
-
+  const handleValidation = async () => {
     const missingFields = requiredFields
       .filter(f => f.required && !columnMapping[f.key])
       .map(f => f.label);
@@ -84,10 +83,9 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
 
     try {
       setLoading(true);
-      setStep(3);
       setErrors([]);
 
-      const response = await fetch('/api/task/import-excel', {
+      const response = await fetch('/api/task/import-preview', {
         method: 'POST',
         body: formData,
       });
@@ -95,12 +93,50 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'import');
+        throw new Error(data.error || 'Erreur lors de la validation');
+      }
+
+      setValidationResult(data.validation);
+
+      if (data.validation && !data.validation.isValid) {
+        setErrors(data.validation.errors);
+        return;
+      }
+
+      await handleImport();
+      
+    } catch (err) {
+      setErrors([err instanceof Error ? err.message : 'Erreur lors de la validation']);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    const formData = new FormData();
+    if (!file) return;
+    formData.append('file', file);
+    formData.append('mapping', JSON.stringify(columnMapping));
+
+    try {
+      setLoading(true);
+      setStep(3);
+      setErrors([]);
+
+      const response = await fetch('/api/task/import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de l'import");
       }
 
       setSuccess(data);
       setStep(4);
-      
+
       if (data.imported > 0) {
         setTimeout(() => {
           onSuccess?.();
@@ -108,7 +144,7 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
         }, 3000);
       }
     } catch (err) {
-      setErrors([err instanceof Error ? err.message : 'Erreur lors de l\'import']);
+      setErrors([err instanceof Error ? err.message : "Erreur lors de l'import"]);
       setStep(2);
     } finally {
       setLoading(false);
@@ -118,10 +154,12 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 ">
+        <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Importer des tâches</h2>
-        
+            <p className="text-sm text-gray-500 mt-1">
+              Étape {step} sur 4
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -138,8 +176,8 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
                 <AlertCircle className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
                 <div className="text-sm text-blue-800">
                   <p className="font-medium mb-1">Fichiers acceptés</p>
-                  <p>Formats Excel (.xlsx, .xls) ou CSV. </p>
-                  <p>Formats Pdf/ Image (.pdf, .png, .jpeg, jpg). </p>
+                  <p>Formats Excel (.xlsx, .xls) ou CSV</p>
+                  <p>Formats PDF/Image (.pdf, .png, .jpeg, .jpg)</p>
                 </div>
               </div>
 
@@ -157,7 +195,7 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls,.csv,pdf,.png,.jpeg,.jpg"
+                  accept=".xlsx,.xls,.csv,.pdf,.png,.jpeg,.jpg"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -187,6 +225,30 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
                   <p className="text-sm font-medium text-gray-700 mb-2">
                     Aperçu: {preview.totalRows} ligne(s) détectée(s)
                   </p>
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="min-w-full text-xs">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          {detectedColumns.slice(0, 5).map((col) => (
+                            <th key={col} className="px-3 py-2 text-left font-medium text-gray-700">
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.rows.slice(0, 3).map((row: any, idx: number) => (
+                          <tr key={idx} className="border-t">
+                            {detectedColumns.slice(0, 5).map((col) => (
+                              <td key={col} className="px-3 py-2 text-gray-600">
+                                {String(row[col] || '').substring(0, 30)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -215,19 +277,33 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
                 ))}
               </div>
 
+              {validationResult && validationResult.isValid && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                  <CheckCircle className="text-green-500 flex-shrink-0 mt-0.5" size={20} />
+                  <div className="text-sm text-green-800">
+                    <p className="font-medium">Validation réussie</p>
+                    <p>{validationResult.validRowsCount} ligne(s) prête(s) à être importée(s)</p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={() => setStep(1)}
+                  onClick={() => {
+                    setStep(1);
+                    setValidationResult(null);
+                    setErrors([]);
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Retour
                 </button>
                 <button
-                  onClick={handleImport}
+                  onClick={handleValidation}
                   disabled={loading}
                   className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300"
                 >
-                  {loading ? 'Import en cours...' : 'Importer les tâches'}
+                  {loading ? 'Validation en cours...' : 'Valider et importer'}
                 </button>
               </div>
             </div>
@@ -248,23 +324,12 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
                   Import terminé avec succès !
                 </h3>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p> {success.imported} tâche(s) importée(s)</p>
+                  <p>✓ {success.imported} tâche(s) importée(s)</p>
                   {success.skipped > 0 && (
-                    <p> {success.skipped} ligne(s) ignorée(s)</p>
+                    <p>⚠ {success.skipped} ligne(s) ignorée(s)</p>
                   )}
                 </div>
               </div>
-
-              {success.errors && success.errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="font-medium text-red-800 mb-2">Erreurs détectées:</p>
-                  <ul className="text-sm text-red-700 space-y-1">
-                    {success.errors.map((err: any, idx: React.Key | null | undefined) => (
-                      <li key={idx}>• {err}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
 
               <button
                 onClick={onClose}
@@ -280,12 +345,17 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
               <div className="flex items-start gap-3">
                 <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
                 <div className="flex-1">
-                  <p className="font-medium text-red-800 mb-1">Erreur</p>
-                  <ul className="text-sm text-red-700 space-y-1">
+                  <p className="font-medium text-red-800 mb-2">
+                    {errors.length === 1 ? 'Erreur détectée' : `${errors.length} erreur(s) détectée(s)`}
+                  </p>
+                  <div className="text-sm text-red-700 space-y-1 max-h-60 overflow-y-auto">
                     {errors.map((err, idx) => (
-                      <li key={idx}>• {err}</li>
+                      <p key={idx}>• {err}</p>
                     ))}
-                  </ul>
+                  </div>
+                  <p className="text-sm text-red-600 mt-3">
+                    Veuillez corriger ces erreurs dans votre fichier avant de réessayer.
+                  </p>
                 </div>
               </div>
             </div>
@@ -294,5 +364,4 @@ export default function ExcelImportModal ({ onClose, onSuccess }: Props) {
       </div>
     </div>
   );
-};
-
+}

@@ -11,7 +11,7 @@ import { useTaskModal } from '@/hooks/useTaskModal';
 import AddTaskModal from '@/components/dashboard/modals/AddTaskModal';
 import TaskCard from '@/components/dashboard/TaskCard';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors} from '@dnd-kit/core';
-import ExcelImportModal from '@/components/dashboard/modals/ExcelImportModal';
+import ExcelImportModal from '@/components/dashboard/modals/ImportModal';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchTasks, createTask, updateTask, deleteTask, updateTaskStatus } from '@/store/slices/taskSlice';
 import { useState } from 'react';
