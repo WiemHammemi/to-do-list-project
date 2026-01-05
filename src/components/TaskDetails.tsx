@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle } from 'lucide-react';
+import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle, FileText, RefreshCcw } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { useTaskModal } from '@/hooks/useTaskModal';
@@ -50,11 +50,8 @@ useEffect(() => {
   if (taskId) {
     setHistoryLoading(true);
     fetch(`/api/task/${taskId}/history`)
-      .then(res => {
-        if (!res.ok) throw new Error('Erreur chargement historique');
-        return res.json();
-      })
-      .then(data => {
+      .then(async res => {
+        const data = await res.json();
         setHistory(data.data ?? []);
         setHistoryLoading(false);
       })
@@ -66,7 +63,6 @@ useEffect(() => {
   }
 }, [taskId]);
 
-  console.log("history", history);
 
   const handleDelete = async (id: string) => {
     try {
@@ -87,7 +83,7 @@ useEffect(() => {
       const res = await fetch(`/api/task/${taskId}/history`);
       if (res.ok) {
         const data = await res.json();
-        setHistory(data);
+        setHistory(data.data);
       }
     } catch (err: any) {
       console.error("Erreur modification tâche :", err);
@@ -155,8 +151,9 @@ useEffect(() => {
       case 'status': return <CheckCircle2 size={16} className="text-blue-600" />;
       case 'priority': return <Flag size={16} className="text-orange-600" />;
       case 'created': return <Activity size={16} className="text-purple-600" />;
-      case 'description': return <MessageSquare size={16} className="text-green-600" />;
+      case 'description': return <FileText size={16} className="text-indigo-600" />;
       case 'title': return <Edit size={16} className="text-blue-600" />;
+      case 'due_date': return <Calendar size={16} className="text-green-600" />;
       case 'updated': return <Edit size={16} className="text-blue-600" />;
       case 'deleted': return <Trash2 size={16} className="text-red-600" />;
       default: return <Activity size={16} className="text-gray-600" />;
@@ -233,7 +230,7 @@ useEffect(() => {
                 <p className="text-gray-500">Aucune activité enregistrée</p>
               ) : (
                 <div className="space-y-3">
-                  {history.map(item => (
+                  { Array.isArray(history) && history.map(item => (
                     <div key={item.id} className="flex gap-3 items-start">
                       <div className="flex-shrink-0 mt-1">
                         {getActivityIcon(item.field_name )}

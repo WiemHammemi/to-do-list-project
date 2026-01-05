@@ -35,6 +35,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const currentTask = await prisma.task.findFirst({
     where: { id: Number(id), user_id: Number(session.user.id) }
   });
+  console.log("Current Task:", currentTask);
 
   if (!currentTask) {
     return NextResponse.json({ error: "Tâche non trouvée" }, { status: 404 });
