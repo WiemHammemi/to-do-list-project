@@ -12,7 +12,6 @@ export async function GET() {
     }
 
     const tasks = await prisma.task.findMany({
-        // where: { user_id: Number(session.user.id) },
         orderBy: { created_at: "desc" },
     });
 
@@ -39,7 +38,6 @@ export async function POST(request: Request) {
     },
   });
 
-  // Enregistrer la création dans l'historique
   const userName = session.user.name || 'Utilisateur';
   await createTaskHistory({
     taskId: newTask.id,

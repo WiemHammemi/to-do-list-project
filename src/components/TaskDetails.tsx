@@ -302,7 +302,7 @@ useEffect(() => {
                     <User size={18} />
                     <span className="text-sm font-medium">Crée par</span>
                   </div>
-                  <p className="text-gray-900 ml-6"> {creator?.name || "Inconnu"}</p>
+                  <p className="text-gray-900 ml-6"> {creator?.name || "Utilisateur"}</p>
                 </div>
 
                 <div>
