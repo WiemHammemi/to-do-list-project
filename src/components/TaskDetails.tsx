@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
@@ -11,15 +11,27 @@ import { getUrgencyIndicator } from '@/utils/taskDates';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchTasks, updateTask, deleteTask } from '@/store/slices/taskSlice';
 
+interface HistoryItem {
+  id: number;
+  change_type: string;
+  field_name: string;
+  message: string;
+  created_at: string;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
 export default function TaskDetails({ taskId }: { taskId: string }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { tasks, loading, error } = useAppSelector((state) => state.tasks);
-
-const task = tasks.find(t => String(t.id) === taskId);
-
-
-
+  const task = tasks.find(t => String(t.id) === taskId);
+  
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  
   const {
     selectedTask,
     modalType,
@@ -28,18 +40,33 @@ const task = tasks.find(t => String(t.id) === taskId);
     closeModal
   } = useTaskModal();
 
-  const activities = [
-    { id: 1, type: "status", message: "Statut changé de 'En attente' à 'En cours'", date: "2024-12-24T09:00:00" },
-    { id: 2, type: "comment", message: "Nouveau commentaire ajouté par Mohamed Ali", date: "2024-12-23T14:15:00" },
-    { id: 3, type: "priority", message: "Priorité changée à 'Haute'", date: "2024-12-22T16:20:00" },
-    { id: 4, type: "created", message: "Tâche créée par Ahmed Ben Salem", date: "2024-12-20T11:00:00" }
-  ];
-
   useEffect(() => {
     if (tasks.length === 0) {
       dispatch(fetchTasks());
     }
   }, [dispatch, tasks.length]);
+
+useEffect(() => {
+  if (taskId) {
+    setHistoryLoading(true);
+    fetch(`/api/task/${taskId}/history`)
+      .then(res => {
+        if (!res.ok) throw new Error('Erreur chargement historique');
+        return res.json();
+      })
+      .then(data => {
+        setHistory(data.data ?? []);
+        setHistoryLoading(false);
+      })
+      .catch(err => {
+        console.error('Erreur chargement historique:', err);
+        setHistory([]);
+        setHistoryLoading(false);
+      });
+  }
+}, [taskId]);
+
+  console.log("history", history);
 
   const handleDelete = async (id: string) => {
     try {
@@ -56,6 +83,12 @@ const task = tasks.find(t => String(t.id) === taskId);
     try {
       await dispatch(updateTask(updatedTask)).unwrap();
       closeModal();
+      
+      const res = await fetch(`/api/task/${taskId}/history`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data);
+      }
     } catch (err: any) {
       console.error("Erreur modification tâche :", err);
       alert("Impossible de modifier la tâche : " + err);
@@ -117,12 +150,15 @@ const task = tasks.find(t => String(t.id) === taskId);
     });
   };
 
-  const getActivityIcon = (type: any) => {
-    switch (type) {
+  const getActivityIcon = (field: string) => {
+    switch (field) {
       case 'status': return <CheckCircle2 size={16} className="text-blue-600" />;
-      case 'comment': return <MessageSquare size={16} className="text-green-600" />;
       case 'priority': return <Flag size={16} className="text-orange-600" />;
       case 'created': return <Activity size={16} className="text-purple-600" />;
+      case 'description': return <MessageSquare size={16} className="text-green-600" />;
+      case 'title': return <Edit size={16} className="text-blue-600" />;
+      case 'updated': return <Edit size={16} className="text-blue-600" />;
+      case 'deleted': return <Trash2 size={16} className="text-red-600" />;
       default: return <Activity size={16} className="text-gray-600" />;
     }
   };
@@ -191,19 +227,25 @@ const task = tasks.find(t => String(t.id) === taskId);
                 <Activity size={22} />
                 Historique d'activité
               </h2>
-              <div className="space-y-3">
-                {activities.map(activity => (
-                  <div key={activity.id} className="flex gap-3 items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      {getActivityIcon(activity.type)}
+              {historyLoading ? (
+                <p className="text-gray-500">Chargement de l'historique...</p>
+              ) : history.length === 0 ? (
+                <p className="text-gray-500">Aucune activité enregistrée</p>
+              ) : (
+                <div className="space-y-3">
+                  {history.map(item => (
+                    <div key={item.id} className="flex gap-3 items-start">
+                      <div className="flex-shrink-0 mt-1">
+                        {getActivityIcon(item.field_name )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-gray-700">{item.message}</p>
+                        <p className="text-sm text-gray-500 mt-1">{formatDateTime(item.created_at)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-gray-700">{activity.message}</p>
-                      <p className="text-sm text-gray-500 mt-1">{formatDateTime(activity.date)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
