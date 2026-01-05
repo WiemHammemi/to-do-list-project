@@ -10,6 +10,7 @@ import EditTaskModal from './dashboard/modals/EditTaskModal';
 import { getUrgencyIndicator } from '@/utils/taskDates';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchTasks, updateTask, deleteTask } from '@/store/slices/taskSlice';
+import { useSession } from 'next-auth/react';
 
 interface HistoryItem {
   id: number;
@@ -26,12 +27,13 @@ interface HistoryItem {
 export default function TaskDetails({ taskId }: { taskId: string }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+ 
+
   const { tasks, loading, error } = useAppSelector((state) => state.tasks);
   const task = tasks.find(t => String(t.id) === taskId);
-  
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  
+
   const {
     selectedTask,
     modalType,
@@ -84,6 +86,7 @@ useEffect(() => {
       if (res.ok) {
         const data = await res.json();
         setHistory(data.data);
+
       }
     } catch (err: any) {
       console.error("Erreur modification tâche :", err);
@@ -226,7 +229,7 @@ useEffect(() => {
               </h2>
               {historyLoading ? (
                 <p className="text-gray-500">Chargement de l'historique...</p>
-              ) : history.length === 0 ? (
+              ) : Array.isArray(history) &&  history.length === 0 ? (
                 <p className="text-gray-500">Aucune activité enregistrée</p>
               ) : (
                 <div className="space-y-3">

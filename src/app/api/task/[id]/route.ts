@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const task = await prisma.task.findFirst({
-    where: { id: Number(id), user_id: Number(session.user.id) }
+    where: { id: Number(id)}
   });
 
   if (!task) {
@@ -26,14 +26,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
 
   const body = await request.json();
 
   const currentTask = await prisma.task.findFirst({
-    where: { id: Number(id), user_id: Number(session.user.id) }
+    where: { id: Number(id) }
   });
   console.log("Current Task:", currentTask);
 
@@ -58,8 +55,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     data: updateData,
   });
 
-  const userId = Number(session.user.id);
-  const userName = session.user.name || 'Utilisateur';
+  const userId = Number(session?.user.id);
+  const userName = session?.user.name || 'Utilisateur';
 
   const areDatesEqual = (date1: any, date2: any): boolean => {
     if (!date1 || !date2) return date1 === date2;
@@ -175,37 +172,35 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
   }
 
-  return NextResponse.json(updatedTask, { status: 200 });
+  return NextResponse.json({ data: updatedTask }, { status: 200 });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+
 
   if (isNaN(Number(id))) {
     return NextResponse.json({ error: "ID invalide" }, { status: 400 });
   }
 
   const task = await prisma.task.findFirst({
-    where: { id: Number(id), user_id: Number(session.user.id) }
+    where: { id: Number(id) }
   });
 
   if (task) {
-    const userName = session.user.name || 'Utilisateur';
+    const userName = session?.user.name || 'Utilisateur';
     await createTaskHistory({
       taskId: Number(id),
-      userId: Number(session.user.id),
+      userId: Number(session?.user.id),
       changeType: 'deleted',
       message: `Tâche supprimée par ${userName}`
     });
   }
 
   const result = await prisma.task.deleteMany({
-    where: { id: Number(id), user_id: Number(session.user.id) },
+    where: { id: Number(id)},
   });
 
   if (result.count === 0) {

@@ -106,7 +106,6 @@ export default function EditTaskModal({ task, onClose, onSave }: Props) {
             />
             {errors.due_date && <p className="text-red-500 text-sm mt-1">{errors.due_date}</p>}
 
-
           </div>
         </div>
 
