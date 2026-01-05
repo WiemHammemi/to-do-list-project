@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle, FileText, RefreshCcw } from 'lucide-react';
+import { Calendar, Flag, Clock, CheckCircle2, Edit, Trash2, MessageSquare, Activity, Flame, AlertCircle, FileText, RefreshCcw, User } from 'lucide-react';
 import UserAccountNav from '@/components/UserAccountNav';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { useTaskModal } from '@/hooks/useTaskModal';
@@ -33,6 +33,14 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   const task = tasks.find(t => String(t.id) === taskId);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [creator, setCreator] = useState<{
+  id: number;
+  name?: string;
+  email: string;
+} | null>(null);
+
+
+
 
   const {
     selectedTask,
@@ -65,6 +73,14 @@ useEffect(() => {
   }
 }, [taskId]);
 
+ useEffect(() => {
+  if (!task?.user_id) return;
+
+  fetch(`/api/user/${task.user_id}`)
+    .then(res => res.json())
+    .then(data => setCreator(data))
+    .catch(err => console.error("Error loading user:", err));
+}, [task?.user_id]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -162,7 +178,6 @@ useEffect(() => {
       default: return <Activity size={16} className="text-gray-600" />;
     }
   };
-
   const urgencyIndicator = task ? getUrgencyIndicator(task) : null;
 
   if (loading) {
@@ -277,9 +292,17 @@ useEffect(() => {
                 <div>
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
                     <Clock size={18} />
-                    <span className="text-sm font-medium">Créée le</span>
+                    <span className="text-sm font-medium">Crée le</span>
                   </div>
                   <p className="text-gray-900 ml-6">{formatDate(task.created_at)}</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <User size={18} />
+                    <span className="text-sm font-medium">Crée par</span>
+                  </div>
+                  <p className="text-gray-900 ml-6"> {creator?.name || "Inconnu"}</p>
                 </div>
 
                 <div>
