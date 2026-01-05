@@ -324,10 +324,10 @@ export default function ExcelImportModal({ onClose, onSuccess }: Props) {
                   Import terminé avec succès !
                 </h3>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p>✓ {success.imported} tâche(s) importée(s)</p>
-                  {success.skipped > 0 && (
-                    <p>⚠ {success.skipped} ligne(s) ignorée(s)</p>
-                  )}
+                  <p> {success.imported} tâche(s) importée(s)</p>
+                  {/* {success.skipped > 0 && (
+                    <p> {success.skipped} ligne(s) ignorée(s)</p>
+                  )} */}
                 </div>
               </div>
 
@@ -350,7 +350,7 @@ export default function ExcelImportModal({ onClose, onSuccess }: Props) {
                   </p>
                   <div className="text-sm text-red-700 space-y-1 max-h-60 overflow-y-auto">
                     {errors.map((err, idx) => (
-                      <p key={idx}>• {err}</p>
+                      <p key={idx}>•  {err}</p>
                     ))}
                   </div>
                   <p className="text-sm text-red-600 mt-3">

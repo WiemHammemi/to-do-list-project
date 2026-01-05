@@ -15,9 +15,10 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { tasks, loading, error } = useAppSelector((state) => state.tasks);
-  
-  // Trouver la tâche dans le store Redux
-  const task = tasks.find(t => t.id === taskId);
+
+const task = tasks.find(t => String(t.id) === taskId);
+
+
 
   const {
     selectedTask,
@@ -35,7 +36,6 @@ export default function TaskDetails({ taskId }: { taskId: string }) {
   ];
 
   useEffect(() => {
-    // Charger les tâches si elles ne sont pas déjà en mémoire
     if (tasks.length === 0) {
       dispatch(fetchTasks());
     }
