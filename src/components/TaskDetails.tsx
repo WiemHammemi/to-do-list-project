@@ -10,7 +10,6 @@ import EditTaskModal from './dashboard/modals/EditTaskModal';
 import { getUrgencyIndicator } from '@/utils/taskDates';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchTasks, updateTask, deleteTask } from '@/store/slices/taskSlice';
-import { useSession } from 'next-auth/react';
 
 interface HistoryItem {
   id: number;

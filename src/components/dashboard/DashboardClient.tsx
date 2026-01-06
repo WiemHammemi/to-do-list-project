@@ -54,7 +54,6 @@ export default function DashboardClient() {
     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0
   };
 
-  // Charger les tâches au montage du composant
   useEffect(() => {
     dispatch(fetchTasks());
   }, [dispatch]);
@@ -181,7 +180,6 @@ export default function DashboardClient() {
   };
 
   const handleImportSuccess = () => {
-    // Recharger les tâches après un import réussi
     dispatch(fetchTasks());
   };
 
